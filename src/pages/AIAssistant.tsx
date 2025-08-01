@@ -1,242 +1,68 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, HelpCircle, Calculator, Search, FileText } from 'lucide-react';
+import { Send, Bot, User, MessageSquare, Calculator, Search, CheckCircle, HelpCircle, Phone } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import Card from '../components/UI/Card';
 import Button from '../components/UI/Button';
 import type { ChatMessage } from '../contexts/AppContext';
 
 const AIAssistant: React.FC = () => {
   const { state, dispatch } = useApp();
-  const [inputMessage, setInputMessage] = useState('');
+  const { t } = useLanguage();
+  const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const predefinedQuestions = [
-    {
-      icon: HelpCircle,
-      question: 'How to register for GST?',
-      category: 'GST & Tax',
-    },
-    {
-      icon: FileText,
-      question: 'What licenses do I need for food business?',
-      category: 'Licensing',
-    },
-    {
-      icon: Search,
-      question: 'DPIIT recognition benefits?',
-      category: 'Startup Policy',
-    },
-    {
-      icon: Calculator,
-      question: 'How long does MCA approval take?',
-      category: 'Company Registration',
-    },
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [state.chatHistory]);
+
+  const popularQuestions = [
+    'What documents do I need for GST registration?',
+    'How long does company registration take?',
+    'What are the fees for FSSAI license?',
+    'Which schemes am I eligible for?',
+    'How to get DPIIT recognition?',
+    'What is the process for trade license?',
   ];
 
   const quickActions = [
-    { icon: Calculator, label: 'Calculate Fees', action: 'calculate-fees' },
-    { icon: Search, label: 'Find Schemes', action: 'find-schemes' },
-    { icon: FileText, label: 'Check Status', action: 'check-status' },
+    {
+      icon: Calculator,
+      title: t('chat.calculateFees'),
+      description: 'Get fee estimates for licenses',
+      action: () => handleQuickMessage('Calculate fees for my business type'),
+    },
+    {
+      icon: Search,
+      title: t('chat.findSchemes'),
+      description: 'Discover funding opportunities',
+      action: () => handleQuickMessage('Show me eligible schemes'),
+    },
+    {
+      icon: CheckCircle,
+      title: t('chat.checkStatus'),
+      description: 'Check application status',
+      action: () => handleQuickMessage('What is the status of my applications?'),
+    },
   ];
 
-  // Bot responses for different queries
-  const getBotResponse = (message: string): string => {
-    const lowerMessage = message.toLowerCase();
+  const helpTopics = [
+    'Company Registration',
+    'GST & Tax Compliance',
+    'MSME Registration',
+    'Food License (FSSAI)',
+    'Import Export Code',
+    'Labor Compliance',
+  ];
 
-    if (lowerMessage.includes('gst') && lowerMessage.includes('register')) {
-      return `To register for GST in Delhi:
-
-**Required Documents:**
-• PAN Card of business
-• Aadhaar Card of authorized signatory
-• Business address proof
-• Bank account statement
-• Digital signature (if company)
-
-**Process:**
-1. Visit GST portal (gst.gov.in)
-2. Fill GST REG-01 form
-3. Upload required documents
-4. Submit application with ₹200 fee
-5. Verification by GST officer
-6. GSTIN issued (usually within 3-7 working days)
-
-**Fee:** ₹200 for most businesses
-**Timeline:** 3-7 working days
-
-Would you like help with any specific step?`;
-    }
-
-    if (lowerMessage.includes('food') && (lowerMessage.includes('license') || lowerMessage.includes('business'))) {
-      return `For starting a food business in Delhi, you need these licenses:
-
-**Primary Licenses:**
-• **FSSAI License** - Food safety license (₹7,500 for 5 years)
-• **Trade License** - From MCD (₹2,000-₹10,000)
-• **GST Registration** - If turnover > ₹20 lakhs
-• **Fire NOC** - From Delhi Fire Service
-
-**Additional Requirements:**
-• Health permit for food handlers
-• Water NOC if using groundwater
-• Pollution NOC for certain food processing
-• Shop & Establishment registration
-
-**Timeline:** 30-45 days total
-**Estimated Cost:** ₹15,000-₹30,000
-
-I can help you track the application process for each of these!`;
-    }
-
-    if (lowerMessage.includes('dpiit') && lowerMessage.includes('benefit')) {
-      return `DPIIT Recognition offers amazing benefits for startups:
-
-**Tax Benefits:**
-• Income tax exemption for 3 consecutive years
-• Capital gains tax exemption (Sections 54EE, 54GB)
-• No angel tax on funding up to ₹25 crores
-
-**Compliance Benefits:**
-• Self-certification for labor and environment laws
-• Fast-track patent examination (2-3 months vs 2-3 years)
-• 80% reduction in patent filing fees
-
-**Funding Support:**
-• Access to Fund of Funds (₹10,000 crores corpus)
-• Priority in government tenders
-• Access to various government schemes
-
-**Eligibility:**
-• Company incorporated < 10 years ago
-• Annual turnover < ₹100 crores
-• Working on innovation/scalable business model
-
-**Application Fee:** Free!
-**Timeline:** 45-60 days
-
-Ready to apply? I can guide you through the process!`;
-    }
-
-    if (lowerMessage.includes('mca') && (lowerMessage.includes('approval') || lowerMessage.includes('long'))) {
-      return `MCA (Ministry of Corporate Affairs) approval timelines:
-
-**Company Registration:**
-• **SPICe+ Form:** 5-7 working days
-• **Name approval:** 1-2 days (if available)
-• **Certificate of Incorporation:** 7-10 days total
-
-**Other MCA Services:**
-• **Director identification:** 1-2 days
-• **Annual filing (AOC-4/MGT-7):** Immediate online
-• **ROC compliance:** 2-3 days
-
-**Factors affecting timeline:**
-• Document completeness ⏰
-• Name availability 📝
-• RoC workload 🏢
-• Any clarifications needed ❓
-
-**Pro Tips for faster approval:**
-1. Keep all documents ready
-2. Use professional registered address
-3. Choose unique company name
-4. Submit during weekdays
-
-**Current processing time:** 7-15 days on average
-
-Need help preparing your documents?`;
-    }
-
-    if (lowerMessage.includes('calculate') && lowerMessage.includes('fee')) {
-      return `I can help calculate registration fees! Here are common costs:
-
-**Company Registration:**
-• Government fees: ₹4,000-₹8,000
-• Professional fees: ₹5,000-₹15,000
-• **Total: ₹9,000-₹23,000**
-
-**GST Registration:**
-• Government fee: ₹200
-• **Total: ₹200**
-
-**FSSAI License:**
-• Basic: ₹100 (turnover < ₹12L)
-• State: ₹3,000 (₹12L-₹20Cr)
-• Central: ₹7,500 (> ₹20Cr)
-
-**Trade License (MCD):**
-• Small shop: ₹2,000-₹5,000
-• Restaurant: ₹5,000-₹15,000
-
-Tell me your business type and I'll give you a detailed cost breakdown!`;
-    }
-
-    if (lowerMessage.includes('find') && lowerMessage.includes('scheme')) {
-      return `I can recommend schemes based on your profile! Popular options:
-
-**For Manufacturing:**
-• PMEGP - Up to ₹25L with 25% subsidy
-• MSME loans - Collateral-free up to ₹2Cr
-• PLI schemes - Production incentives
-
-**For Startups:**
-• Delhi Startup Policy - ₹20L grant
-• SIDBI Fund of Funds - Equity funding
-• Atal Innovation Mission
-
-**For Women/SC/ST:**
-• Stand-Up India - ₹10L to ₹1Cr
-• Mudra loans - Up to ₹10L
-• PMEGP - Extra 10% subsidy
-
-**For Exports:**
-• MEIS - Merchandise export incentive
-• EPCG - Duty-free imports
-• Interest subvention schemes
-
-Visit our Scheme Recommender for personalized suggestions!`;
-    }
-
-    if (lowerMessage.includes('check') && lowerMessage.includes('status')) {
-      return `You can check application status for various services:
-
-**GST Status:**
-• Visit gst.gov.in → Services → Registration → Track Application Status
-• Use ARN (Application Reference Number)
-
-**Company Registration:**
-• MCA portal → View Company/LLP Master Data
-• Use CIN or application number
-
-**FSSAI Status:**
-• Visit foscos.fssai.gov.in
-• Login with application number
-
-**Trade License:**
-• MCD online portal
-• Use application reference number
-
-**Pro Tip:** Save all reference numbers in our tracker for easy monitoring!
-
-Need help tracking any specific application?`;
-    }
-
-    // Default responses for general queries
-    const defaultResponses = [
-      "I understand you're looking for information about startup compliance. Could you be more specific about what you need help with?",
-      "That's a great question! For detailed guidance on this topic, you might want to check our Setup Wizard or browse the Scheme Recommender.",
-      "I'm here to help with your startup compliance questions. You can ask me about licensing, registrations, schemes, or any other business setup queries.",
-      "For complex queries like this, I recommend using our interactive tools. Try the Approval Tracker or document generator for specific guidance.",
-    ];
-
-    return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
-  };
-
-  const sendMessage = async (message: string) => {
+  const handleSendMessage = async () => {
     if (!message.trim()) return;
 
-    // Add user message
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       message: message.trim(),
@@ -245,239 +71,359 @@ Need help tracking any specific application?`;
     };
 
     dispatch({ type: 'ADD_CHAT_MESSAGE', payload: userMessage });
-    setInputMessage('');
+    setMessage('');
     setIsTyping(true);
 
-    // Simulate bot typing delay
+    // Simulate AI response
     setTimeout(() => {
-      const botResponse = getBotResponse(message);
-      const botMessage: ChatMessage = {
+      const botResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        message: botResponse,
+        message: generateBotResponse(userMessage.message),
         sender: 'bot',
         timestamp: new Date().toISOString(),
       };
-
-      dispatch({ type: 'ADD_CHAT_MESSAGE', payload: botMessage });
+      dispatch({ type: 'ADD_CHAT_MESSAGE', payload: botResponse });
       setIsTyping(false);
     }, 1500);
   };
 
-  const handleQuickAction = (action: string) => {
-    switch (action) {
-      case 'calculate-fees':
-        sendMessage('Can you help me calculate registration fees?');
-        break;
-      case 'find-schemes':
-        sendMessage('What funding schemes are available for my business?');
-        break;
-      case 'check-status':
-        sendMessage('How can I check my application status?');
-        break;
-    }
+  const handleQuickMessage = (quickMessage: string) => {
+    setMessage(quickMessage);
+    setTimeout(() => handleSendMessage(), 100);
   };
 
-  const formatMessage = (message: string) => {
-    // Convert markdown-style formatting to HTML
-    return message
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/\n/g, '<br/>');
+  const generateBotResponse = (userMessage: string): string => {
+    const lowerMessage = userMessage.toLowerCase();
+    
+    if (lowerMessage.includes('gst') || lowerMessage.includes('tax')) {
+      return `For GST registration, you'll need:
+      
+1. PAN Card of the business
+2. Aadhaar Card of authorized signatory
+3. Business registration certificate
+4. Bank account details
+5. Business address proof
+
+The process typically takes 3-7 working days and costs ₹0 (free) for most businesses. You can apply online through the GST portal.
+
+Would you like me to help you with the application process?`;
+    }
+    
+    if (lowerMessage.includes('company registration') || lowerMessage.includes('incorporation')) {
+      return `Company registration in Delhi involves these steps:
+
+1. **Name Reservation** (1-2 days) - ₹1,000
+2. **SPICe+ Filing** (10-15 days) - ₹4,000-6,000
+3. **PAN & TAN** (included in SPICe+)
+4. **Bank Account Opening** (2-3 days)
+
+Total timeline: 15-20 days
+Total cost: ₹5,000-8,000 (including professional fees)
+
+Required documents:
+- Director's PAN & Aadhaar
+- Address proof
+- Passport size photos
+- Registered office proof
+
+Need help with the application?`;
+    }
+    
+    if (lowerMessage.includes('scheme') || lowerMessage.includes('funding')) {
+      return `Based on your business profile, here are some schemes you might be eligible for:
+
+🎯 **Highly Recommended:**
+• PMEGP - Up to ₹25L with 25-35% subsidy
+• Mudra Loan - Up to ₹10L collateral-free
+• Delhi Startup Policy - ₹20L grant
+
+💡 **Also Consider:**
+• Stand-Up India (if SC/ST/Women)
+• SIDBI Fund of Funds
+• Credit Guarantee Scheme
+
+Would you like detailed information about any specific scheme?`;
+    }
+    
+    if (lowerMessage.includes('fssai') || lowerMessage.includes('food')) {
+      return `FSSAI License requirements depend on your business type:
+
+**Basic Registration** (Turnover < ₹12L): ₹100
+**State License** (₹12L - ₹20Cr): ₹2,500-7,500
+**Central License** (> ₹20Cr): ₹7,500-10,000
+
+📋 **Documents needed:**
+• Form B application
+• ID & address proof
+• Business premises proof
+• NOC from owner/rent agreement
+• Water test report (if applicable)
+
+⏱️ **Timeline:** 15-30 days
+
+The process is online through FSSAI portal. Need help with the application?`;
+    }
+    
+    if (lowerMessage.includes('fee') || lowerMessage.includes('cost') || lowerMessage.includes('calculate')) {
+      return `Here's a quick fee breakdown for common licenses:
+
+💰 **Registration Fees:**
+• Company Registration: ₹5,000-8,000
+• GST Registration: Free
+• FSSAI Basic: ₹100
+• Trade License: ₹2,000-5,000
+• MSME/Udyam: Free
+
+🏛️ **Professional Fees:**
+• CA/CS charges: ₹2,000-5,000 per license
+• Documentation: ₹500-1,000
+
+📊 **Total estimated cost for a typical startup:** ₹15,000-25,000
+
+Want a detailed estimate for your specific business type?`;
+    }
+    
+    if (lowerMessage.includes('status') || lowerMessage.includes('track')) {
+      return `To check your application status:
+
+🔍 **Online Tracking:**
+• GST: GST Portal → Track Application Status
+• Company: MCA Portal → View Company/LLP Master Data
+• FSSAI: FSSAI Portal → Track Your Application
+• Trade License: Municipal Corporation website
+
+📱 **Alternative Methods:**
+• Call helpline numbers
+• Visit respective offices
+• Use our tracking feature in the Approval Tracker
+
+Would you like me to help you track a specific application?`;
+    }
+    
+    return `I understand you're asking about "${userMessage}". 
+
+I'm here to help with:
+• License applications and requirements
+• Government scheme eligibility
+• Fee calculations and timelines
+• Document preparation
+• Application status tracking
+
+Could you please be more specific about what you'd like to know? For example:
+- "What documents do I need for GST registration?"
+- "Which schemes am I eligible for?"
+- "How much does company registration cost?"
+
+You can also use the quick action buttons below for common queries!`;
   };
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [state.chatHistory, isTyping]);
-
-  // Initialize with welcome message if no chat history
-  useEffect(() => {
-    if (state.chatHistory.length === 0) {
-      const welcomeMessage: ChatMessage = {
-        id: 'welcome',
-        message: `👋 Hi! I'm your AI compliance assistant. I can help you with:
-
-• **Licensing & Registration** - GST, Company registration, Trade license
-• **Government Schemes** - PMEGP, Mudra, Delhi Startup Policy
-• **Documentation** - Required documents, processes, timelines
-• **Fee Calculation** - Cost estimates for various registrations
-• **Application Status** - How to track your submissions
-
-Ask me anything about starting your business in Delhi!`,
-        sender: 'bot',
-        timestamp: new Date().toISOString(),
-      };
-
-      dispatch({ type: 'ADD_CHAT_MESSAGE', payload: welcomeMessage });
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
     }
-  }, []);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container max-w-4xl">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors overflow-x-hidden">
+      <div className="container max-w-6xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <div className="bg-blue-500 p-3 rounded-full">
-              <Bot className="h-8 w-8 text-white" />
+            <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-2xl">
+              <Bot className="h-8 w-8 text-blue-600 dark:text-blue-400" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">AI Compliance Assistant</h1>
-          <p className="text-gray-600">
-            Get instant answers to your startup compliance questions
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">{t('chat.title')}</h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            {t('chat.subtitle')}
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-4 gap-6">
-          {/* Chat Area */}
-          <div className="lg:col-span-3 space-y-6">
-            {/* Quick Questions */}
-            {state.chatHistory.length <= 1 && (
-              <Card>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Popular Questions</h3>
-                <div className="grid md:grid-cols-2 gap-3">
-                  {predefinedQuestions.map((item, index) => (
-                    <button
-                      key={index}
-                      onClick={() => sendMessage(item.question)}
-                      className="flex items-start space-x-3 p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                      <item.icon className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{item.question}</p>
-                        <p className="text-xs text-gray-500">{item.category}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </Card>
-            )}
-
-            {/* Chat Messages */}
-            <Card className="h-96 flex flex-col">
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {state.chatHistory.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex items-start space-x-3 ${
-                      message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''
-                    }`}
-                  >
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                      message.sender === 'user' 
-                        ? 'bg-blue-500' 
-                        : 'bg-gray-200'
-                    }`}>
-                      {message.sender === 'user' ? (
-                        <User className="h-4 w-4 text-white" />
-                      ) : (
-                        <Bot className="h-4 w-4 text-gray-600" />
-                      )}
-                    </div>
-                    <div className={`flex-1 max-w-xs lg:max-w-md ${
-                      message.sender === 'user' ? 'text-right' : ''
-                    }`}>
-                      <div className={`inline-block p-3 rounded-lg ${
-                        message.sender === 'user'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-900'
-                      }`}>
-                        <div 
-                          className="text-sm whitespace-pre-wrap"
-                          dangerouslySetInnerHTML={{ __html: formatMessage(message.message) }}
-                        />
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {new Date(message.timestamp).toLocaleTimeString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-
-                {isTyping && (
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                      <Bot className="h-4 w-4 text-gray-600" />
-                    </div>
-                    <div className="bg-gray-100 rounded-lg p-3">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Input Area */}
-              <div className="border-t p-4">
-                <div className="flex space-x-3">
-                  <input
-                    type="text"
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    placeholder="Ask me anything about startup compliance..."
-                    className="flex-1 input-field"
-                    onKeyPress={(e) => e.key === 'Enter' && sendMessage(inputMessage)}
-                    disabled={isTyping}
-                  />
-                  <Button
-                    onClick={() => sendMessage(inputMessage)}
-                    disabled={!inputMessage.trim() || isTyping}
-                    icon={Send}
-                  >
-                    Send
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </div>
-
+        <div className="grid lg:grid-cols-4 gap-8">
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="lg:col-span-1 space-y-6">
             {/* Quick Actions */}
-            <Card>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('chat.quickActions')}</h3>
               <div className="space-y-3">
                 {quickActions.map((action, index) => (
                   <button
                     key={index}
-                    onClick={() => handleQuickAction(action.action)}
-                    className="w-full flex items-center space-x-3 p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                    onClick={action.action}
+                    className="w-full p-3 text-left bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
                   >
-                    <action.icon className="h-5 w-5 text-blue-500" />
-                    <span className="text-sm font-medium text-gray-900">{action.label}</span>
+                    <div className="flex items-center space-x-3">
+                      <action.icon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      <div>
+                        <div className="font-medium text-gray-900 dark:text-white text-sm">{action.title}</div>
+                        <div className="text-xs text-gray-600 dark:text-gray-300">{action.description}</div>
+                      </div>
+                    </div>
                   </button>
                 ))}
               </div>
             </Card>
 
             {/* Help Topics */}
-            <Card>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Help Topics</h3>
-              <div className="space-y-2 text-sm">
-                <p className="text-gray-600">• Company Registration</p>
-                <p className="text-gray-600">• GST Registration</p>
-                <p className="text-gray-600">• FSSAI License</p>
-                <p className="text-gray-600">• Trade License</p>
-                <p className="text-gray-600">• DPIIT Recognition</p>
-                <p className="text-gray-600">• Government Schemes</p>
-                <p className="text-gray-600">• Compliance Calendar</p>
-                <p className="text-gray-600">• Document Requirements</p>
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('chat.helpTopics')}</h3>
+              <div className="space-y-2">
+                {helpTopics.map((topic, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleQuickMessage(`Tell me about ${topic}`)}
+                    className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    {topic}
+                  </button>
+                ))}
               </div>
             </Card>
 
-            {/* Contact Support */}
-            <Card>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Need Human Help?</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                For complex queries, reach out to our compliance experts.
+            {/* Human Support */}
+            <Card className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('chat.needHumanHelp')}</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                Need personalized assistance? Connect with our compliance experts.
               </p>
-              <Button variant="outline" size="sm" className="w-full">
-                Contact Support
+              <Button variant="outline" size="sm" icon={Phone} className="w-full">
+                {t('chat.contactSupport')}
               </Button>
+            </Card>
+          </div>
+
+          {/* Chat Area */}
+          <div className="lg:col-span-3">
+            <Card className="h-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+              <div className="flex flex-col h-full">
+                {/* Chat Header */}
+                <div className="border-b border-gray-200 dark:border-gray-700 p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full">
+                      <Bot className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 dark:text-white">LaunchMate Assistant</h3>
+                      <p className="text-sm text-green-600 dark:text-green-400">Online • Ready to help</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[500px] max-h-[600px]">
+                  {state.chatHistory.length === 0 ? (
+                    <div className="text-center py-8">
+                      <MessageSquare className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                      <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                        Welcome! How can I help you today?
+                      </h4>
+                      <p className="text-gray-600 dark:text-gray-300 mb-6">
+                        Ask me anything about startup compliance, licenses, or government schemes.
+                      </p>
+                      
+                      {/* Popular Questions */}
+                      <div className="text-left max-w-md mx-auto">
+                        <h5 className="font-medium text-gray-900 dark:text-white mb-3">{t('chat.popularQuestions')}:</h5>
+                        <div className="space-y-2">
+                          {popularQuestions.slice(0, 4).map((question, index) => (
+                            <button
+                              key={index}
+                              onClick={() => handleQuickMessage(question)}
+                              className="w-full text-left p-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                            >
+                              • {question}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {state.chatHistory.map((msg) => (
+                        <div
+                          key={msg.id}
+                          className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div className={`flex items-start space-x-2 max-w-[80%] ${msg.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                            <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                              msg.sender === 'user' 
+                                ? 'bg-blue-500' 
+                                : 'bg-gray-200 dark:bg-gray-700'
+                            }`}>
+                              {msg.sender === 'user' ? (
+                                <User className="h-4 w-4 text-white" />
+                              ) : (
+                                <Bot className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                              )}
+                            </div>
+                            <div className={`px-4 py-2 rounded-2xl text-sm ${
+                              msg.sender === 'user'
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                            }`}>
+                              <div className="whitespace-pre-wrap break-words">{msg.message}</div>
+                              <div className={`text-xs mt-1 ${
+                                msg.sender === 'user' 
+                                  ? 'text-blue-100' 
+                                  : 'text-gray-500 dark:text-gray-400'
+                              }`}>
+                                {new Date(msg.timestamp).toLocaleTimeString([], { 
+                                  hour: '2-digit', 
+                                  minute: '2-digit' 
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {isTyping && (
+                        <div className="flex justify-start">
+                          <div className="flex items-start space-x-2">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                              <Bot className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                            </div>
+                            <div className="bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-2xl">
+                              <div className="flex space-x-1">
+                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* Input */}
+                <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+                  <div className="flex space-x-3">
+                    <div className="flex-1">
+                      <textarea
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        placeholder={t('chat.placeholder')}
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                        rows={2}
+                        disabled={isTyping}
+                      />
+                    </div>
+                    <Button
+                      onClick={handleSendMessage}
+                      disabled={!message.trim() || isTyping}
+                      icon={Send}
+                      className="self-end"
+                    >
+                      {t('chat.send')}
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </Card>
           </div>
         </div>
