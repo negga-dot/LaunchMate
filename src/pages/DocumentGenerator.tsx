@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Download, FileText, AlertCircle, CheckCircle, Copy, Eye } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 import Card from '../components/UI/Card';
 import Button from '../components/UI/Button';
 import ProgressBar from '../components/UI/ProgressBar';
 
 const DocumentGenerator: React.FC = () => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     companyName: '',
     directorName: '',
@@ -256,12 +258,12 @@ Director
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors">
       <div className="container max-w-6xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Document Generator</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Document Generator</h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Auto-fill government forms and applications with your business details
           </p>
         </div>
@@ -272,8 +274,8 @@ Director
             {/* Progress Card */}
             <Card>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">Company Information</h2>
-                <div className="text-sm text-gray-600">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Company Information</h2>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
                   {getCompletionPercentage()}% Complete
                 </div>
               </div>
@@ -285,11 +287,11 @@ Director
               />
 
               {getMissingFieldsCount() > 0 && (
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 mb-6">
                   <div className="flex items-center">
                     <AlertCircle className="h-5 w-5 text-orange-500 mr-2" />
-                    <span className="text-sm text-orange-700">
-                      {getMissingFieldsCount()} fields missing - Complete all fields to unlock document generation
+                    <span className="text-sm text-orange-700 dark:text-orange-300">
+                      {getMissingFieldsCount()} {t('documents.fieldsComplete')}
                     </span>
                   </div>
                 </div>
@@ -298,7 +300,7 @@ Director
               <form className="space-y-6">
                 {requiredFields.map((field) => (
                   <div key={field.key}>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       {field.label}
                     </label>
                     {field.type === 'textarea' ? (
@@ -327,7 +329,7 @@ Director
             {activeDocument && (
               <Card>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Document Preview: {documents.find(d => d.id === activeDocument)?.name}
                   </h3>
                   <div className="flex space-x-2">
@@ -348,8 +350,8 @@ Director
                     </Button>
                   </div>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg border">
-                  <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <pre className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono">
                     {getDocumentTemplate(activeDocument)}
                   </pre>
                 </div>
@@ -361,7 +363,7 @@ Director
           <div className="space-y-6">
             {/* Available Documents */}
             <Card>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Available Documents</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('documents.availableDocuments')}</h3>
               <div className="space-y-4">
                 {documents.map((doc) => {
                   const canGenerate = canGenerateDocument(doc);
@@ -371,7 +373,7 @@ Director
                     <div
                       key={doc.id}
                       className={`p-4 border rounded-lg transition-colors ${
-                        canGenerate ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'
+                        canGenerate ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20' : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'
                       }`}
                     >
                       <div className="flex items-start space-x-3">
@@ -385,12 +387,12 @@ Director
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-medium text-gray-900 mb-1">
+                          <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-1">
                             {doc.name}
                           </h4>
-                          <p className="text-xs text-gray-600 mb-2">{doc.description}</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">{doc.description}</p>
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
                               ⏱️ {doc.estimatedTime}
                             </span>
                             {canGenerate ? (
@@ -402,7 +404,7 @@ Director
                                   icon={Eye}
                                   onClick={() => setActiveDocument(doc.id)}
                                 >
-                                  Preview
+                                  {t('documents.preview')}
                                 </Button>
                                 <Button
                                   size="sm"
@@ -410,12 +412,12 @@ Director
                                   icon={isGenerated ? Download : FileText}
                                   onClick={() => generateDocument(doc.id)}
                                 >
-                                  {isGenerated ? 'Download' : 'Generate'}
+                                  {isGenerated ? t('documents.download') : t('documents.generate')}
                                 </Button>
                               </div>
                             ) : (
-                              <span className="text-xs text-red-600">
-                                Missing fields
+                              <span className="text-xs text-red-600 dark:text-red-400">
+                                {t('documents.missingFields')}
                               </span>
                             )}
                           </div>
@@ -429,24 +431,24 @@ Director
 
             {/* Legal Language Simplifier */}
             <Card>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Legal Language Simplifier
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                {t('documents.legalSimplifier') || 'Legal Language Simplifier'}
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Convert complex legal jargon into plain English for better understanding.
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                {t('documents.legalSimplifierDesc') || 'Convert complex legal jargon into plain English for better understanding.'}
               </p>
               <div className="space-y-3">
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-xs font-medium text-gray-700 mb-1">Complex:</p>
-                  <p className="text-xs text-gray-600">"Authorized Share Capital"</p>
-                  <p className="text-xs font-medium text-gray-700 mb-1 mt-2">Simple:</p>
-                  <p className="text-xs text-green-700">"Maximum money you can raise by selling shares"</p>
+                <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Complex:</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">"Authorized Share Capital"</p>
+                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 mt-2">Simple:</p>
+                  <p className="text-xs text-green-700 dark:text-green-400">"Maximum money you can raise by selling shares"</p>
                 </div>
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-xs font-medium text-gray-700 mb-1">Complex:</p>
-                  <p className="text-xs text-gray-600">"Memorandum of Association"</p>
-                  <p className="text-xs font-medium text-gray-700 mb-1 mt-2">Simple:</p>
-                  <p className="text-xs text-green-700">"Document defining your company's purpose and scope"</p>
+                <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Complex:</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">"Memorandum of Association"</p>
+                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 mt-2">Simple:</p>
+                  <p className="text-xs text-green-700 dark:text-green-400">"Document defining your company's purpose and scope"</p>
                 </div>
               </div>
               <Button variant="outline" size="sm" className="w-full mt-4">
@@ -456,23 +458,23 @@ Director
 
             {/* Help & Tips */}
             <Card>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Tips</h3>
-              <div className="space-y-3 text-sm text-gray-600">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('documents.tips')}</h3>
+              <div className="space-y-3 text-sm text-gray-600 dark:text-gray-300">
                 <div className="flex items-start space-x-2">
                   <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                  <p>Keep your PAN and Aadhaar details handy for quick form filling</p>
+                  <p>{t('documents.tip1') || 'Keep your PAN and Aadhaar details handy for quick form filling'}</p>
                 </div>
                 <div className="flex items-start space-x-2">
                   <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                  <p>Use your registered office address consistently across all documents</p>
+                  <p>{t('documents.tip2') || 'Use your registered office address consistently across all documents'}</p>
                 </div>
                 <div className="flex items-start space-x-2">
                   <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                  <p>Review generated documents before submitting to authorities</p>
+                  <p>{t('documents.tip3') || 'Review generated documents before submitting to authorities'}</p>
                 </div>
                 <div className="flex items-start space-x-2">
                   <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                  <p>Save generated documents for future reference and modifications</p>
+                  <p>{t('documents.tip4') || 'Save generated documents for future reference and modifications'}</p>
                 </div>
               </div>
             </Card>
