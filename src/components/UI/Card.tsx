@@ -21,9 +21,9 @@ const Card: React.FC<CardProps> = ({
 
   return (
     <div 
-      className={`bg-white rounded-xl border border-gray-200 shadow-sm ${
+      className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm ${
         hover ? 'card-hover' : ''
-      } ${paddingClasses[padding]} ${className}`}
+      } ${paddingClasses[padding]} transition-colors ${className}`}
     >
       {children}
     </div>
