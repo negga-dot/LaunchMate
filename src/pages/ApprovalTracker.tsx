@@ -5,9 +5,11 @@ import Card from '../components/UI/Card';
 import Button from '../components/UI/Button';
 import ProgressBar from '../components/UI/ProgressBar';
 import type { Approval } from '../contexts/AppContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const ApprovalTracker: React.FC = () => {
   const { state, dispatch } = useApp();
+  const { t } = useLanguage();
   const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -18,11 +20,11 @@ const ApprovalTracker: React.FC = () => {
   });
 
   const statusConfig = {
-    'not-started': { label: 'Not Started', color: 'bg-gray-100 text-gray-700', icon: Clock },
-    'documents-ready': { label: 'Documents Ready', color: 'bg-blue-100 text-blue-700', icon: CheckCircle },
-    'submitted': { label: 'Submitted', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
-    'under-review': { label: 'Under Review', color: 'bg-orange-100 text-orange-700', icon: AlertCircle },
-    'approved': { label: 'Approved', color: 'bg-green-100 text-green-700', icon: CheckCircle },
+    'not-started': { label: t('tracker.notStarted'), color: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300', icon: Clock },
+    'documents-ready': { label: t('tracker.documentsReady'), color: 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300', icon: CheckCircle },
+    'submitted': { label: t('tracker.submitted'), color: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300', icon: Clock },
+    'under-review': { label: t('tracker.underReview'), color: 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300', icon: AlertCircle },
+    'approved': { label: t('tracker.approved'), color: 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300', icon: CheckCircle },
   };
 
   const filteredApprovals = state.approvals.filter(approval => {
@@ -69,14 +71,14 @@ const ApprovalTracker: React.FC = () => {
       {filteredApprovals.map((approval) => {
         const StatusIcon = statusConfig[approval.status].icon;
         return (
-          <Card key={approval.id} hover>
+          <Card key={approval.id} hover className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold text-gray-900 mb-1 truncate">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1 truncate">
                   {approval.name}
                 </h3>
-                <p className="text-sm text-gray-600 mb-2">{approval.department}</p>
-                <div className="flex items-center text-sm text-gray-500">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{approval.department}</p>
+                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                   <Clock className="h-4 w-4 mr-1" />
                   <span>{approval.timeline}</span>
                 </div>
@@ -89,13 +91,13 @@ const ApprovalTracker: React.FC = () => {
             
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Status
                 </label>
                 <select
                   value={approval.status}
                   onChange={(e) => handleStatusChange(approval.id, e.target.value as Approval['status'])}
-                  className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="not-started">Not Started</option>
                   <option value="documents-ready">Documents Ready</option>
@@ -194,16 +196,16 @@ const ApprovalTracker: React.FC = () => {
 
   if (state.approvals.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors">
         <div className="container">
           <Card className="text-center py-16">
-            <AlertCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">No Approvals Found</h2>
-            <p className="text-gray-600 mb-8">
-              Start by completing the setup wizard to generate your personalized approval list.
+            <AlertCircle className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{t('tracker.noApprovalsFound')}</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-8">
+              {t('tracker.noApprovalsDesc')}
             </p>
             <Button onClick={() => window.location.href = '/wizard'}>
-              Start Setup Wizard
+              {t('tracker.startSetupWizard')}
             </Button>
           </Card>
         </div>
@@ -212,28 +214,28 @@ const ApprovalTracker: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors">
       <div className="container">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Approval Tracker</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">{t('tracker.title')}</h1>
           <div className="grid sm:grid-cols-3 gap-6 mb-6">
             <Card>
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600 mb-1">{completedCount}</div>
-                <div className="text-sm text-gray-600">Completed</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">{t('common.completed')}</div>
               </div>
             </Card>
             <Card>
               <div className="text-center">
                 <div className="text-2xl font-bold text-orange-600 mb-1">{totalCount - completedCount}</div>
-                <div className="text-sm text-gray-600">Pending</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">{t('common.pending')}</div>
               </div>
             </Card>
             <Card>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900 mb-1">{totalCount}</div>
-                <div className="text-sm text-gray-600">Total</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{totalCount}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">{t('common.total')}</div>
               </div>
             </Card>
           </div>
@@ -244,16 +246,16 @@ const ApprovalTracker: React.FC = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <Filter className="h-5 w-5 text-gray-400" />
+              <Filter className="h-5 w-5 text-gray-400 dark:text-gray-500" />
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               >
-                <option value="all">All Approvals</option>
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-                <option value="under-review">Under Review</option>
+                <option value="all">{t('tracker.allApprovals')}</option>
+                <option value="pending">{t('common.pending')}</option>
+                <option value="completed">{t('tracker.completed')}</option>
+                <option value="under-review">{t('tracker.underReviewFilter')}</option>
               </select>
             </div>
             
@@ -261,28 +263,28 @@ const ApprovalTracker: React.FC = () => {
               <button
                 onClick={() => setViewMode('card')}
                 className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'card' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+                  viewMode === 'card' ? 'bg-white dark:bg-gray-700 shadow-sm' : 'hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
-                <Grid className="h-4 w-4" />
+                <Grid className="h-4 w-4 text-gray-600 dark:text-gray-300" />
               </button>
               <button
                 onClick={() => setViewMode('table')}
                 className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'table' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+                  viewMode === 'table' ? 'bg-white dark:bg-gray-700 shadow-sm' : 'hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
-                <List className="h-4 w-4" />
+                <List className="h-4 w-4 text-gray-600 dark:text-gray-300" />
               </button>
             </div>
           </div>
 
           <div className="flex space-x-3">
             <Button variant="outline" icon={Download} size="sm">
-              Export
+              {t('common.export')}
             </Button>
             <Button icon={Plus} size="sm" onClick={() => setShowAddModal(true)}>
-              Add Custom
+              {t('tracker.addCustom')}
             </Button>
           </div>
         </div>
@@ -294,11 +296,11 @@ const ApprovalTracker: React.FC = () => {
         {showAddModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <Card className="w-full max-w-md">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Add Custom Approval</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('tracker.addCustomApproval')}</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Approval Name *
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {t('tracker.approvalName')} *
                   </label>
                   <input
                     type="text"
@@ -309,8 +311,8 @@ const ApprovalTracker: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Department *
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {t('tracker.department')} *
                   </label>
                   <input
                     type="text"
@@ -321,8 +323,8 @@ const ApprovalTracker: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Expected Timeline
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {t('tracker.expectedTimeline')}
                   </label>
                   <input
                     type="text"
@@ -335,10 +337,10 @@ const ApprovalTracker: React.FC = () => {
               </div>
               <div className="flex space-x-3 mt-6">
                 <Button variant="outline" onClick={() => setShowAddModal(false)} className="flex-1">
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
                 <Button onClick={handleAddApproval} className="flex-1">
-                  Add Approval
+                  {t('tracker.addCustomApproval')}
                 </Button>
               </div>
             </Card>
