@@ -1,200 +1,154 @@
 import React, { useState } from 'react';
-import { Calendar, Plus, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
-import Card from '../components/UI/Card';
-import Button from '../components/UI/Button';
-import type { CalendarEvent } from '../contexts/AppContext';
+import { Calendar, ChevronLeft, ChevronRight, Clock, AlertCircle, CheckCircle } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
+
+interface ComplianceEvent {
+  id: string;
+  title: string;
+  date: Date;
+  type: 'deadline' | 'renewal' | 'filing' | 'inspection';
+  status: 'pending' | 'completed' | 'overdue';
+  description: string;
+}
 
 const ComplianceCalendar: React.FC = () => {
-  const { state, dispatch } = useApp();
-  const [viewMode, setViewMode] = useState<'month' | 'week'>('month');
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newEvent, setNewEvent] = useState({
-    title: '',
-    date: '',
-    type: 'deadline' as CalendarEvent['type'],
-    description: '',
-    priority: 'medium' as CalendarEvent['priority'],
-  });
+  const { t } = useLanguage();
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [view, setView] = useState<'month' | 'week'>('month');
 
-  const eventTypes = {
-    gst: { label: 'GST Filing', color: 'bg-red-500', textColor: 'text-red-700' },
-    renewal: { label: 'Renewal', color: 'bg-blue-500', textColor: 'text-blue-700' },
-    deadline: { label: 'Deadline', color: 'bg-orange-500', textColor: 'text-orange-700' },
-    filing: { label: 'Filing', color: 'bg-purple-500', textColor: 'text-purple-700' },
-  };
-
-  const priorityConfig = {
-    high: { color: 'bg-red-100 border-red-300 text-red-700', icon: AlertTriangle },
-    medium: { color: 'bg-yellow-100 border-yellow-300 text-yellow-700', icon: Clock },
-    low: { color: 'bg-green-100 border-green-300 text-green-700', icon: CheckCircle },
-  };
-
-  // Sample events if none exist
-  const sampleEvents: CalendarEvent[] = [
+  // Sample compliance events
+  const events: ComplianceEvent[] = [
     {
       id: '1',
       title: 'GST Return Filing',
-      date: '2025-01-20',
-      type: 'gst',
-      priority: 'high',
-      description: 'Monthly GST return filing deadline',
-      completed: false,
+      date: new Date(2025, 0, 20),
+      type: 'filing',
+      status: 'pending',
+      description: 'Monthly GST return filing deadline'
     },
     {
       id: '2',
-      title: 'Fire NOC Renewal',
-      date: '2025-01-25',
+      title: 'Trade License Renewal',
+      date: new Date(2025, 0, 25),
       type: 'renewal',
-      priority: 'medium',
-      description: 'Annual fire safety certificate renewal',
-      completed: false,
+      status: 'pending',
+      description: 'Annual trade license renewal'
     },
     {
       id: '3',
-      title: 'PF Filing',
-      date: '2025-01-15',
-      type: 'filing',
-      priority: 'medium',
-      description: 'Monthly PF contribution filing',
-      completed: true,
-    },
-    {
-      id: '4',
-      title: 'Trade License Renewal',
-      date: '2025-02-10',
-      type: 'renewal',
-      priority: 'high',
-      description: 'Annual trade license renewal with MCD',
-      completed: false,
+      title: 'Fire Safety Inspection',
+      date: new Date(2025, 0, 15),
+      type: 'inspection',
+      status: 'completed',
+      description: 'Annual fire safety compliance check'
     }
   ];
 
-  const events = state.events.length > 0 ? state.events : sampleEvents;
+  const getMonthName = (date: Date) => {
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
 
-  const getCurrentMonthEvents = () => {
-    const currentMonth = selectedDate.getMonth();
-    const currentYear = selectedDate.getFullYear();
-    
-    return events.filter(event => {
-      const eventDate = new Date(event.date);
-      return eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
+  const getDaysInMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  };
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    setCurrentDate(prev => {
+      const newDate = new Date(prev);
+      if (direction === 'prev') {
+        newDate.setMonth(prev.getMonth() - 1);
+      } else {
+        newDate.setMonth(prev.getMonth() + 1);
+      }
+      return newDate;
     });
   };
 
-  const getTodayEvents = () => {
-    const today = new Date().toISOString().split('T')[0];
-    return events.filter(event => event.date === today);
-  };
-
-  const getUpcomingEvents = () => {
-    const today = new Date();
-    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-    
-    return events.filter(event => {
-      const eventDate = new Date(event.date);
-      return eventDate >= today && eventDate <= nextWeek && !event.completed;
-    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  };
-
-  const handleAddEvent = () => {
-    if (!newEvent.title || !newEvent.date) return;
-
-    const event: CalendarEvent = {
-      id: Date.now().toString(),
-      title: newEvent.title,
-      date: newEvent.date,
-      type: newEvent.type,
-      priority: newEvent.priority,
-      description: newEvent.description,
-      completed: false,
-    };
-
-    dispatch({ type: 'ADD_EVENT', payload: event });
-    setNewEvent({
-      title: '',
-      date: '',
-      type: 'deadline',
-      description: '',
-      priority: 'medium',
+  const navigateWeek = (direction: 'prev' | 'next') => {
+    setCurrentDate(prev => {
+      const newDate = new Date(prev);
+      if (direction === 'prev') {
+        newDate.setDate(prev.getDate() - 7);
+      } else {
+        newDate.setDate(prev.getDate() + 7);
+      }
+      return newDate;
     });
-    setShowAddModal(false);
   };
 
-  const toggleEventCompletion = (eventId: string) => {
-    const event = events.find(e => e.id === eventId);
-    if (event) {
-      dispatch({
-        type: 'UPDATE_EVENT',
-        payload: {
-          id: eventId,
-          updates: { completed: !event.completed }
-        }
-      });
+  const getEventsForDate = (date: Date) => {
+    return events.filter(event => 
+      event.date.toDateString() === date.toDateString()
+    );
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'overdue':
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
+      default:
+        return <Clock className="w-4 h-4 text-yellow-500" />;
     }
   };
 
-  const renderCalendarGrid = () => {
-    const currentMonthEvents = getCurrentMonthEvents();
-    const firstDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
-    const lastDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
-    const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay());
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'overdue':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      default:
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+    }
+  };
 
+  const renderMonthView = () => {
+    const daysInMonth = getDaysInMonth(currentDate);
+    const firstDay = getFirstDayOfMonth(currentDate);
     const days = [];
-    const currentDate = new Date(startDate);
 
-    for (let i = 0; i < 42; i++) {
-      const dayEvents = currentMonthEvents.filter(event => {
-        const eventDate = new Date(event.date);
-        return eventDate.toDateString() === currentDate.toDateString();
-      });
+    // Empty cells for days before the first day of the month
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<div key={`empty-${i}`} className="h-24 border border-gray-200 dark:border-gray-700"></div>);
+    }
 
-      const isCurrentMonth = currentDate.getMonth() === selectedDate.getMonth();
-      const isToday = currentDate.toDateString() === new Date().toDateString();
+    // Days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      const dayEvents = getEventsForDate(date);
+      const isToday = date.toDateString() === new Date().toDateString();
 
       days.push(
-        <div
-          key={i}
-          className={`min-h-[100px] border border-gray-200 p-2 ${
-            isCurrentMonth ? 'bg-white' : 'bg-gray-50'
-          } ${isToday ? 'ring-2 ring-blue-500' : ''}`}
-        >
-          <div className={`text-sm font-medium mb-1 ${
-            isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
-          } ${isToday ? 'text-blue-600' : ''}`}>
-            {currentDate.getDate()}
+        <div key={day} className={`h-24 border border-gray-200 dark:border-gray-700 p-1 ${isToday ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-gray-800'}`}>
+          <div className={`text-sm font-medium ${isToday ? 'text-blue-600 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>
+            {day}
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1 mt-1">
             {dayEvents.slice(0, 2).map(event => (
-              <div
-                key={event.id}
-                className={`text-xs p-1 rounded text-white truncate cursor-pointer ${
-                  eventTypes[event.type].color
-                } ${event.completed ? 'opacity-50 line-through' : ''}`}
-                onClick={() => toggleEventCompletion(event.id)}
-                title={event.title}
-              >
+              <div key={event.id} className={`text-xs px-1 py-0.5 rounded truncate ${getStatusColor(event.status)}`}>
                 {event.title}
               </div>
             ))}
             {dayEvents.length > 2 && (
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-gray-500 dark:text-gray-400">
                 +{dayEvents.length - 2} more
               </div>
             )}
           </div>
         </div>
       );
-
-      currentDate.setDate(currentDate.getDate() + 1);
     }
 
     return (
-      <div className="grid grid-cols-7 border border-gray-200 rounded-lg overflow-hidden">
+      <div className="grid grid-cols-7 gap-0">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} className="bg-gray-100 p-3 text-center text-sm font-medium text-gray-700 border-b border-gray-200">
+          <div key={day} className="bg-gray-50 dark:bg-gray-800 p-2 text-center text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
             {day}
           </div>
         ))}
@@ -203,239 +157,175 @@ const ComplianceCalendar: React.FC = () => {
     );
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Compliance Calendar</h1>
-            <p className="text-gray-600">Never miss a deadline or renewal date</p>
-          </div>
-          
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('month')}
-                className={`px-3 py-2 text-sm rounded-md transition-colors ${
-                  viewMode === 'month' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
-                }`}
-              >
-                Month
-              </button>
-              <button
-                onClick={() => setViewMode('week')}
-                className={`px-3 py-2 text-sm rounded-md transition-colors ${
-                  viewMode === 'week' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
-                }`}
-              >
-                Week
-              </button>
-            </div>
-            <Button icon={Plus} onClick={() => setShowAddModal(true)}>
-              Add Event
-            </Button>
-          </div>
-        </div>
+  const renderWeekView = () => {
+    const startOfWeek = new Date(currentDate);
+    startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
 
-        <div className="grid lg:grid-cols-4 gap-8">
-          {/* Calendar */}
-          <div className="lg:col-span-3">
-            <Card>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                </h2>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const newDate = new Date(selectedDate);
-                      newDate.setMonth(newDate.getMonth() - 1);
-                      setSelectedDate(newDate);
-                    }}
-                  >
-                    ←
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const newDate = new Date(selectedDate);
-                      newDate.setMonth(newDate.getMonth() + 1);
-                      setSelectedDate(newDate);
-                    }}
-                  >
-                    →
-                  </Button>
+    const weekDays = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(startOfWeek);
+      date.setDate(startOfWeek.getDate() + i);
+      weekDays.push(date);
+    }
+
+    return (
+      <div className="grid grid-cols-7 gap-0">
+        {weekDays.map((date, index) => {
+          const dayEvents = getEventsForDate(date);
+          const isToday = date.toDateString() === new Date().toDateString();
+
+          return (
+            <div key={index} className={`border border-gray-200 dark:border-gray-700 ${isToday ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-gray-800'}`}>
+              <div className={`p-2 text-center border-b border-gray-200 dark:border-gray-700 ${isToday ? 'bg-blue-100 dark:bg-blue-800/50' : 'bg-gray-50 dark:bg-gray-700'}`}>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                </div>
+                <div className={`text-lg font-medium ${isToday ? 'text-blue-600 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>
+                  {date.getDate()}
                 </div>
               </div>
-              {renderCalendarGrid()}
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Today's Tasks */}
-            <Card>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Today's Tasks</h3>
-              <div className="space-y-3">
-                {getTodayEvents().length === 0 ? (
-                  <p className="text-gray-500 text-sm">No tasks for today</p>
-                ) : (
-                  getTodayEvents().map(event => {
-                    const PriorityIcon = priorityConfig[event.priority].icon;
-                    return (
-                      <div
-                        key={event.id}
-                        className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                          priorityConfig[event.priority].color
-                        } ${event.completed ? 'opacity-50' : ''}`}
-                        onClick={() => toggleEventCompletion(event.id)}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1 min-w-0">
-                            <h4 className={`font-medium text-sm ${event.completed ? 'line-through' : ''}`}>
-                              {event.title}
-                            </h4>
-                            <p className="text-xs mt-1 opacity-75">{event.description}</p>
-                          </div>
-                          <PriorityIcon className="h-4 w-4 flex-shrink-0" />
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </Card>
-
-            {/* Upcoming Events */}
-            <Card>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Upcoming (7 days)</h3>
-              <div className="space-y-3">
-                {getUpcomingEvents().length === 0 ? (
-                  <p className="text-gray-500 text-sm">No upcoming events</p>
-                ) : (
-                  getUpcomingEvents().map(event => (
-                    <div key={event.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg">
-                      <div className={`w-3 h-3 rounded-full ${eventTypes[event.type].color}`} />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium text-gray-900 truncate">{event.title}</h4>
-                        <p className="text-xs text-gray-500">
-                          {new Date(event.date).toLocaleDateString()}
-                        </p>
-                      </div>
+              <div className="p-2 space-y-1 min-h-[200px]">
+                {dayEvents.map(event => (
+                  <div key={event.id} className={`text-xs px-2 py-1 rounded ${getStatusColor(event.status)}`}>
+                    <div className="flex items-center gap-1">
+                      {getStatusIcon(event.status)}
+                      <span className="font-medium">{event.title}</span>
                     </div>
-                  ))
-                )}
-              </div>
-            </Card>
-
-            {/* Legend */}
-            <Card>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Types</h3>
-              <div className="space-y-2">
-                {Object.entries(eventTypes).map(([type, config]) => (
-                  <div key={type} className="flex items-center space-x-3">
-                    <div className={`w-3 h-3 rounded-full ${config.color}`} />
-                    <span className="text-sm text-gray-700">{config.label}</span>
+                    <div className="mt-1 text-xs opacity-75">
+                      {event.description}
+                    </div>
                   </div>
                 ))}
               </div>
-            </Card>
-          </div>
-        </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
-        {/* Add Event Modal */}
-        {showAddModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <Card className="w-full max-w-md">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Event</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Event Title *
-                  </label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    value={newEvent.title}
-                    onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                    placeholder="e.g., GST Return Filing"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date *
-                  </label>
-                  <input
-                    type="date"
-                    className="input-field"
-                    value={newEvent.date}
-                    onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Type
-                    </label>
-                    <select
-                      className="input-field"
-                      value={newEvent.type}
-                      onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value as CalendarEvent['type'] })}
-                    >
-                      <option value="deadline">Deadline</option>
-                      <option value="gst">GST Filing</option>
-                      <option value="renewal">Renewal</option>
-                      <option value="filing">Filing</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Priority
-                    </label>
-                    <select
-                      className="input-field"
-                      value={newEvent.priority}
-                      onChange={(e) => setNewEvent({ ...newEvent, priority: e.target.value as CalendarEvent['priority'] })}
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    className="input-field resize-none"
-                    rows={3}
-                    value={newEvent.description}
-                    onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                    placeholder="Optional description"
-                  />
-                </div>
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors overflow-x-hidden">
+      <div className="container max-w-full px-4 sm:px-6 lg:px-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Calendar className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {t('calendar.title')}
+                </h1>
               </div>
               
-              <div className="flex space-x-3 mt-6">
-                <Button variant="outline" onClick={() => setShowAddModal(false)} className="flex-1">
-                  Cancel
-                </Button>
-                <Button onClick={handleAddEvent} className="flex-1">
-                  Add Event
-                </Button>
+              <div className="hidden sm:flex items-center gap-4">
+                <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                  <button
+                    onClick={() => setView('month')}
+                    className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                      view === 'month'
+                        ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                  >
+                    {t('calendar.month')}
+                  </button>
+                  <button
+                    onClick={() => setView('week')}
+                    className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                      view === 'week'
+                        ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                  >
+                    {t('calendar.week')}
+                  </button>
+                </div>
               </div>
-            </Card>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                {view === 'month' ? getMonthName(currentDate) : 
+                 `Week of ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+              </h2>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => view === 'month' ? navigateMonth('prev') : navigateWeek('prev')}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                </button>
+                <button
+                  onClick={() => setCurrentDate(new Date())}
+                  className="px-3 py-1 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg transition-colors"
+                >
+                  {t('common.today')}
+                </button>
+                <button
+                  onClick={() => view === 'month' ? navigateMonth('next') : navigateWeek('next')}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Mobile View Toggle */}
+            <div className="sm:hidden mt-4">
+              <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 w-full">
+                <button
+                  onClick={() => setView('month')}
+                  className={`flex-1 px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                    view === 'month'
+                      ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  {t('calendar.month')}
+                </button>
+                <button
+                  onClick={() => setView('week')}
+                  className={`flex-1 px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                    view === 'week'
+                      ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  {t('calendar.week')}
+                </button>
+              </div>
+            </div>
           </div>
-        )}
+
+          <div className="p-2 sm:p-6">
+            <div className="overflow-x-auto">
+            {view === 'month' ? renderMonthView() : renderWeekView()}
+            </div>
+          </div>
+
+          <div className="p-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              {t('calendar.upcomingDeadlines')}
+            </h3>
+            <div className="space-y-3">
+              {events.filter(event => event.status === 'pending').map(event => (
+                <div key={event.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    {getStatusIcon(event.status)}
+                    <div>
+                      <div className="font-medium text-gray-900 dark:text-white">{event.title}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">{event.description}</div>
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    {event.date.toLocaleDateString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
