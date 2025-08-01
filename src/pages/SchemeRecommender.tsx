@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Search, Filter, Star, ExternalLink, Save, CheckCircle, X } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import Card from '../components/UI/Card';
 import Button from '../components/UI/Button';
 import type { Scheme } from '../contexts/AppContext';
 
 const SchemeRecommender: React.FC = () => {
   const { state, dispatch } = useApp();
+  const { t } = useLanguage();
   const [filters, setFilters] = useState({
     sector: '',
     founderProfile: '',
@@ -166,26 +168,26 @@ const SchemeRecommender: React.FC = () => {
   };
 
   const renderSchemeCard = (scheme: Scheme) => (
-    <Card key={scheme.id} hover className={`${scheme.eligibility ? '' : 'opacity-60'}`}>
+    <Card key={scheme.id} hover className={`${scheme.eligibility ? '' : 'opacity-60'} bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700`}>
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-2 mb-2">
-            <h3 className="text-lg font-semibold text-gray-900 truncate">{scheme.name}</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">{scheme.name}</h3>
             {scheme.eligibility ? (
               <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
             ) : (
               <X className="h-5 w-5 text-red-500 flex-shrink-0" />
             )}
           </div>
-          <p className="text-gray-600 text-sm mb-3">{scheme.description}</p>
+          <p className="text-gray-600 dark:text-gray-300 text-sm mb-3">{scheme.description}</p>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <span className="text-xs font-medium text-gray-500">Loan Amount</span>
-              <p className="text-sm font-semibold text-gray-900">{scheme.loanAmount}</p>
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Loan Amount</span>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">{scheme.loanAmount}</p>
             </div>
             <div>
-              <span className="text-xs font-medium text-gray-500">Interest Rate</span>
-              <p className="text-sm font-semibold text-gray-900">{scheme.interestRate}</p>
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Interest Rate</span>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">{scheme.interestRate}</p>
             </div>
           </div>
         </div>
@@ -193,8 +195,8 @@ const SchemeRecommender: React.FC = () => {
           onClick={() => handleSaveScheme(scheme)}
           className={`p-2 rounded-lg transition-colors ${
             isSchemesSaved(scheme.id)
-              ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-800'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
           }`}
         >
           <Star className={`h-5 w-5 ${isSchemesSaved(scheme.id) ? 'fill-current' : ''}`} />
@@ -202,8 +204,8 @@ const SchemeRecommender: React.FC = () => {
       </div>
 
       <div className="mb-4">
-        <h4 className="text-sm font-medium text-gray-900 mb-2">Key Benefits:</h4>
-        <ul className="text-sm text-gray-600 space-y-1">
+        <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">{t('schemes.keyBenefits')}:</h4>
+        <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
           {scheme.benefits.slice(0, 3).map((benefit, index) => (
             <li key={index} className="flex items-start">
               <span className="text-green-500 mr-2">•</span>
@@ -222,10 +224,10 @@ const SchemeRecommender: React.FC = () => {
           iconPosition="right"
           onClick={() => window.open(scheme.applyLink, '_blank')}
         >
-          {scheme.eligibility ? 'Apply Now' : 'View Details'}
+          {scheme.eligibility ? t('schemes.applyNow') : t('schemes.viewDetails')}
         </Button>
         <Button variant="outline" size="sm">
-          Learn More
+          {t('schemes.learnMore')}
         </Button>
       </div>
     </Card>
@@ -234,106 +236,106 @@ const SchemeRecommender: React.FC = () => {
   const hasFilters = Object.values(filters).some(value => value !== '');
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors overflow-x-hidden">
+      <div className="container max-w-full px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Scheme Recommender</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Discover government schemes and funding opportunities tailored to your business profile
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">{t('schemes.title')}</h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            {t('schemes.subtitle')}
           </p>
         </div>
 
         {/* Filters */}
         <Card className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Find Your Perfect Scheme</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t('schemes.findPerfectScheme')}</h2>
             <Button
               variant="outline"
               size="sm"
               icon={Filter}
               onClick={() => setShowFilters(!showFilters)}
             >
-              {showFilters ? 'Hide' : 'Show'} Filters
+              {showFilters ? t('schemes.hideFilters') : t('schemes.showFilters')}
             </Button>
           </div>
 
           {showFilters && (
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Business Sector
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('schemes.businessSector')}
                 </label>
                 <select
                   className="input-field"
                   value={filters.sector}
                   onChange={(e) => setFilters({ ...filters, sector: e.target.value })}
                 >
-                  <option value="">Select sector</option>
-                  <option value="manufacturing">Manufacturing</option>
+                  <option value="">{t('schemes.selectSector')}</option>
+                  <option value="manufacturing">{t('common.manufacturing')}</option>
                   <option value="service">Service</option>
-                  <option value="food">Food & Beverage</option>
-                  <option value="tech">Technology</option>
+                  <option value="food">{t('common.food')}</option>
+                  <option value="tech">{t('common.technology')}</option>
                   <option value="export">Export/Import</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Founder Profile
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('schemes.founderProfile')}
                 </label>
                 <select
                   className="input-field"
                   value={filters.founderProfile}
                   onChange={(e) => setFilters({ ...filters, founderProfile: e.target.value })}
                 >
-                  <option value="">Select profile</option>
-                  <option value="general">General</option>
-                  <option value="female">Female</option>
-                  <option value="sc-st-minority">SC/ST/Minority</option>
+                  <option value="">{t('schemes.selectProfile')}</option>
+                  <option value="general">{t('schemes.general')}</option>
+                  <option value="female">{t('schemes.female')}</option>
+                  <option value="sc-st-minority">{t('schemes.scstMinority')}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Investment Range
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('schemes.investmentRange')}
                 </label>
                 <select
                   className="input-field"
                   value={filters.investmentRange}
                   onChange={(e) => setFilters({ ...filters, investmentRange: e.target.value })}
                 >
-                  <option value="">Select range</option>
-                  <option value="under-10l">Under ₹10 Lakhs</option>
-                  <option value="10l-1cr">₹10L - ₹1 Crore</option>
+                  <option value="">{t('schemes.selectRange')}</option>
+                  <option value="under-10l">{t('common.under10l')}</option>
+                  <option value="10l-1cr">{t('common.10lto1cr')}</option>
                   <option value="above-1cr">Above ₹1 Crore</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Business Stage
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('schemes.businessStage')}
                 </label>
                 <select
                   className="input-field"
                   value={filters.businessStage}
                   onChange={(e) => setFilters({ ...filters, businessStage: e.target.value })}
                 >
-                  <option value="">Select stage</option>
-                  <option value="idea">Idea Stage</option>
-                  <option value="setup">Setup Phase</option>
-                  <option value="running">Running Business</option>
-                  <option value="scaling">Scaling Up</option>
+                  <option value="">{t('schemes.selectStage')}</option>
+                  <option value="idea">{t('schemes.ideaStage')}</option>
+                  <option value="setup">{t('schemes.setupPhase')}</option>
+                  <option value="running">{t('schemes.runningBusiness')}</option>
+                  <option value="scaling">{t('schemes.scalingUp')}</option>
                 </select>
               </div>
             </div>
           )}
 
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
-              placeholder="Search schemes by name or description..."
+              placeholder={t('schemes.searchPlaceholder')}
               className="input-field pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -347,12 +349,12 @@ const SchemeRecommender: React.FC = () => {
                 return (
                   <span
                     key={key}
-                    className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+                    className="inline-flex items-center px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded-full"
                   >
                     {value}
                     <button
                       onClick={() => setFilters({ ...filters, [key]: '' })}
-                      className="ml-2 text-blue-600 hover:text-blue-800"
+                      className="ml-2 text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -361,9 +363,9 @@ const SchemeRecommender: React.FC = () => {
               })}
               <button
                 onClick={() => setFilters({ sector: '', founderProfile: '', investmentRange: '', businessStage: '' })}
-                className="text-sm text-gray-600 hover:text-gray-800 underline"
+                className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 underline"
               >
-                Clear all
+                {t('schemes.clearAll')}
               </button>
             </div>
           )}
@@ -374,19 +376,19 @@ const SchemeRecommender: React.FC = () => {
           <Card>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600 mb-1">{eligibleSchemes.length}</div>
-              <div className="text-sm text-gray-600">Eligible Schemes</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">{t('common.eligible')} {t('nav.schemes')}</div>
             </div>
           </Card>
           <Card>
             <div className="text-center">
               <div className="text-2xl font-bold text-yellow-600 mb-1">{state.schemes.length}</div>
-              <div className="text-sm text-gray-600">Saved Schemes</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">{t('common.saved')} {t('nav.schemes')}</div>
             </div>
           </Card>
           <Card>
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600 mb-1">{filteredSchemes.length}</div>
-              <div className="text-sm text-gray-600">Total Available</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">{t('common.total')} {t('common.available')}</div>
             </div>
           </Card>
         </div>
@@ -394,11 +396,11 @@ const SchemeRecommender: React.FC = () => {
         {/* Eligible Schemes */}
         {eligibleSchemes.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
               <CheckCircle className="h-6 w-6 text-green-500 mr-2" />
-              Eligible Schemes ({eligibleSchemes.length})
+              {t('schemes.eligibleSchemes')} ({eligibleSchemes.length})
             </h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {eligibleSchemes.map(renderSchemeCard)}
             </div>
           </div>
@@ -407,11 +409,11 @@ const SchemeRecommender: React.FC = () => {
         {/* Other Schemes */}
         {ineligibleSchemes.length > 0 && (
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
               <X className="h-6 w-6 text-gray-400 mr-2" />
-              Other Schemes ({ineligibleSchemes.length})
+              {t('schemes.otherSchemes')} ({ineligibleSchemes.length})
             </h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {ineligibleSchemes.map(renderSchemeCard)}
             </div>
           </div>
@@ -419,10 +421,10 @@ const SchemeRecommender: React.FC = () => {
 
         {filteredSchemes.length === 0 && (
           <Card className="text-center py-16">
-            <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No schemes found</h3>
-            <p className="text-gray-600 mb-4">
-              Try adjusting your filters or search terms to find relevant schemes.
+            <Search className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{t('schemes.noSchemesFound')}</h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              {t('schemes.noSchemesDesc')}
             </p>
             <Button
               variant="outline"
@@ -431,7 +433,7 @@ const SchemeRecommender: React.FC = () => {
                 setSearchTerm('');
               }}
             >
-              Clear All Filters
+              {t('schemes.clearAllFilters')}
             </Button>
           </Card>
         )}
