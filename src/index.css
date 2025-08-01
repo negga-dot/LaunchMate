@@ -5,11 +5,22 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border transition-colors;
   }
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans transition-colors;
     font-family: 'Inter', sans-serif;
+  }
+  
+  html.dark {
+    color-scheme: dark;
+  }
+  
+  /* Ensure smooth transitions for all elements */
+  * {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
   }
 }
 
@@ -77,19 +88,23 @@
 }
 
 .btn-primary {
-  @apply bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200 min-h-[44px] flex items-center justify-center;
+  @apply bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200 min-h-[44px] flex items-center justify-center dark:bg-blue-600 dark:hover:bg-blue-700;
 }
 
 .btn-secondary {
-  @apply bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-medium py-3 px-6 rounded-xl transition-all duration-200 min-h-[44px] flex items-center justify-center;
+  @apply bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-medium py-3 px-6 rounded-xl transition-all duration-200 min-h-[44px] flex items-center justify-center dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white dark:border-gray-600;
 }
 
 .input-field {
-  @apply w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 min-h-[44px];
+  @apply w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 min-h-[44px] bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 max-w-full;
 }
 
 @media (max-width: 640px) {
   .container {
     @apply px-4;
+  }
+  
+  .input-field {
+    @apply text-base; /* Prevents zoom on iOS */
   }
 }
