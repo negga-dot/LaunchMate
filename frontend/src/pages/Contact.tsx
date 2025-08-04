@@ -34,7 +34,7 @@ const Contact: React.FC = () => {
           {teamMembers.map((member, index) => (
             <Card key={index} className="text-center bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <div className="mb-6">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-gray-800 to-gray-600 dark:from-gray-700 dark:to-gray-500 rounded-full mx-auto mb-4 flex items-center justify-center">
                   <span className="text-2xl font-bold text-white">
                     {member.name.split(' ').map(n => n[0]).join('')}
                   </span>
@@ -49,7 +49,7 @@ const Contact: React.FC = () => {
                   href={member.instagramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center space-x-3 p-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200"
+                  className="flex items-center justify-center space-x-3 p-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-200"
                 >
                   <Instagram className="h-5 w-5" />
                   <span className="font-medium">{member.instagram}</span>
@@ -59,7 +59,7 @@ const Contact: React.FC = () => {
                   href={member.discordUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center space-x-3 p-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all duration-200"
+                  className="flex items-center justify-center space-x-3 p-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-700 transition-all duration-200"
                 >
                   <MessageCircle className="h-5 w-5" />
                   <span className="font-medium">{member.discord}</span>
@@ -69,14 +69,14 @@ const Contact: React.FC = () => {
           ))}
         </div>
 
-        <Card className="mt-8 text-center bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700">
-          <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
+        <Card className="mt-8 text-center bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-yellow-200 dark:border-yellow-800">
+          <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100 mb-2">
             Need Quick Help?
           </h3>
-          <p className="text-blue-700 dark:text-blue-300 mb-4">
+          <p className="text-yellow-700 dark:text-yellow-300 mb-4">
             For immediate assistance, reach out to us on Discord or Instagram. We typically respond within a few hours.
           </p>
-          <div className="flex flex-col sm:flex-row gap-2 justify-center text-sm text-blue-600 dark:text-blue-400">
+          <div className="flex flex-col sm:flex-row gap-2 justify-center text-sm text-yellow-600 dark:text-yellow-400">
             <span>• Business inquiries: Instagram DM</span>
             <span>• Technical support: Discord</span>
           </div>

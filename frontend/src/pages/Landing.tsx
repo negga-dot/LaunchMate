@@ -52,15 +52,15 @@ const Landing: React.FC = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-scale-in">
               <Link to="/wizard">
-                <Button size="lg" icon={ArrowRight} iconPosition="right">
+                <Button size="lg" icon={ArrowRight} iconPosition="right" className="text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700">
                   {t('landing.hero.cta')}
                 </Button>
               </Link>
-              <Link to="/dashboard">
-                <Button variant="outline" size="lg">
+              <a href="https://drive.google.com/file/d/1234567890/view" target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="lg" className="text-gray-900 border-gray-300 hover:bg-gray-100 dark:text-gray-100 dark:border-gray-600 dark:hover:bg-gray-800">
                   {t('landing.hero.demo')}
                 </Button>
-              </Link>
+              </a>
             </div>
           </div>
         </div>
@@ -207,23 +207,23 @@ const Landing: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-800 dark:to-purple-800 transition-colors">
+      <section className="py-20 bg-gradient-to-r from-gray-900 to-blue-900 dark:from-gray-800 dark:to-blue-800 transition-colors">
         <div className="container">
           <div className="text-center text-white">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               {t('landing.benefits.ready')}
             </h2>
-            <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-200 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
               {t('landing.benefits.readyDesc')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/wizard">
-                <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
+                <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white">
                   {t('landing.benefits.getStarted')}
                 </Button>
               </Link>
               <Link to="/schemes">
-                <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-blue-600">
+                <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-gray-900 dark:border-gray-300 dark:text-gray-200 dark:hover:bg-gray-200 dark:hover:text-gray-900">
                   {t('landing.benefits.explore')}
                 </Button>
               </Link>

@@ -417,11 +417,6 @@ Would you like me to help you with any specific compliance requirement?`;
       <div className="container max-w-6xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-3 rounded-2xl">
-              <Sparkles className="h-8 w-8 text-white" />
-            </div>
-          </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">{t('chat.title')}</h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             {t('chat.subtitle')}
