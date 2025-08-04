@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Clock, AlertCircle, CheckCircle } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Clock, AlertCircle, CheckCircle, Plus, X } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useApp } from '../contexts/AppContext';
+import Card from '../components/UI/Card';
+import Button from '../components/UI/Button';
 
 interface ComplianceEvent {
   id: string;
@@ -11,10 +14,28 @@ interface ComplianceEvent {
   description: string;
 }
 
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  dueDate: string;
+  priority: 'high' | 'medium' | 'low';
+  completed: boolean;
+}
+
 const ComplianceCalendar: React.FC = () => {
   const { t } = useLanguage();
+  const { dispatch } = useApp();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week'>('month');
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    dueDate: '',
+    priority: 'medium' as 'high' | 'medium' | 'low'
+  });
 
   // Sample compliance events
   const events: ComplianceEvent[] = [
@@ -80,8 +101,59 @@ const ComplianceCalendar: React.FC = () => {
     });
   };
 
+  const handleAddTask = () => {
+    if (!newTask.title || !newTask.dueDate) return;
+
+    const task: Task = {
+      id: Date.now().toString(),
+      title: newTask.title,
+      description: newTask.description,
+      dueDate: newTask.dueDate,
+      priority: newTask.priority,
+      completed: false
+    };
+
+    setTasks([...tasks, task]);
+    
+    // Add to app events for dashboard
+    const calendarEvent = {
+      id: task.id,
+      title: task.title,
+      date: task.dueDate,
+      type: 'deadline' as const,
+      priority: task.priority,
+      description: task.description,
+      completed: false
+    };
+    
+    dispatch({ type: 'ADD_EVENT', payload: calendarEvent });
+    
+    setNewTask({ title: '', description: '', dueDate: '', priority: 'medium' });
+    setShowTaskModal(false);
+  };
+
+  const deleteTask = (taskId: string) => {
+    setTasks(tasks.filter(t => t.id !== taskId));
+  };
+
+  const toggleTaskComplete = (taskId: string) => {
+    setTasks(tasks.map(t => 
+      t.id === taskId ? { ...t, completed: !t.completed } : t
+    ));
+  };
+
   const getEventsForDate = (date: Date) => {
-    return events.filter(event => 
+    const eventList = [...events];
+    const taskEvents = tasks.map(task => ({
+      id: task.id,
+      title: task.title,
+      date: new Date(task.dueDate),
+      type: 'deadline' as const,
+      status: task.completed ? 'completed' as const : 'pending' as const,
+      description: task.description
+    }));
+    
+    return [...eventList, ...taskEvents].filter(event => 
       event.date.toDateString() === date.toDateString()
     );
   };
@@ -268,6 +340,14 @@ const ComplianceCalendar: React.FC = () => {
                 >
                   <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 </button>
+                <Button
+                  size="sm"
+                  icon={Plus}
+                  onClick={() => setShowTaskModal(true)}
+                  className="ml-4"
+                >
+                  Add Task
+                </Button>
               </div>
             </div>
             
@@ -323,9 +403,132 @@ const ComplianceCalendar: React.FC = () => {
                   </div>
                 </div>
               ))}
+              {tasks.filter(task => !task.completed).map(task => (
+                <div key={task.id} className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={task.completed}
+                      onChange={() => toggleTaskComplete(task.id)}
+                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                    />
+                    <div>
+                      <div className="font-medium text-gray-900 dark:text-white">{task.title}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">{task.description}</div>
+                      <div className={`text-xs px-2 py-1 rounded-full inline-block mt-1 ${
+                        task.priority === 'high' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                        task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                        'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                      }`}>
+                        {task.priority}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      {new Date(task.dueDate).toLocaleDateString()}
+                    </div>
+                    <button
+                      onClick={() => deleteTask(task.id)}
+                      className="p-1 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/20 rounded"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
+
+        {/* Add Task Modal */}
+        {showTaskModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <Card className="w-full max-w-md">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Add New Task</h3>
+                <button
+                  onClick={() => setShowTaskModal(false)}
+                  className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Task Title *
+                  </label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    value={newTask.title}
+                    onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                    placeholder="Enter task title"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    className="input-field resize-none"
+                    rows={3}
+                    value={newTask.description}
+                    onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                    placeholder="Enter task description"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Due Date *
+                  </label>
+                  <input
+                    type="date"
+                    className="input-field"
+                    value={newTask.dueDate}
+                    onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Priority
+                  </label>
+                  <select
+                    className="input-field"
+                    value={newTask.priority}
+                    onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as 'high' | 'medium' | 'low' })}
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="flex space-x-3 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowTaskModal(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddTask}
+                  disabled={!newTask.title || !newTask.dueDate}
+                  className="flex-1"
+                >
+                  Add Task
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
