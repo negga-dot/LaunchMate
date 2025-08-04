@@ -14,6 +14,8 @@ import SchemeRecommender from './pages/SchemeRecommender';
 import AIAssistant from './pages/AIAssistant';
 import Dashboard from './pages/Dashboard';
 import DocumentGenerator from './pages/DocumentGenerator';
+import Contact from './pages/Contact';
+import Support from './pages/Support';
 
 function App() {
   return (
@@ -32,6 +34,8 @@ function App() {
                   <Route path="/schemes" element={<SchemeRecommender />} />
                   <Route path="/documents" element={<DocumentGenerator />} />
                   <Route path="/chat" element={<AIAssistant />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/support" element={<Support />} />
                 </Route>
               </Routes>
               <ToastContainer />
