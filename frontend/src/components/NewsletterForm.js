@@ -12,7 +12,7 @@ function NewsletterForm() {
     const onSubmit = async e => {
         e.preventDefault();
         try {
-            const res = await axios.post('http://localhost:5000/api/subscribe', formData);
+            const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/subscribe`, formData);
             setResponseMsg({ type: 'success', text: res.data.msg });
             setFormData({ firstName: '', email: '' }); // Clear form
         } catch (err) {

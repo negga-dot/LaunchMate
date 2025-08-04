@@ -23,7 +23,7 @@ const Footer: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/subscribe', formData);
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/subscribe`, formData);
       
       const successEvent = new CustomEvent('show-toast', {
         detail: { message: response.data.msg || 'Thanks for subscribing! 🎉', type: 'success' }
