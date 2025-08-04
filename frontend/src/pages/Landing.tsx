@@ -207,30 +207,30 @@ const Landing: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-gray-900 to-blue-900 dark:from-gray-800 dark:to-blue-800 transition-colors">
-        <div className="container">
-          <div className="text-center text-white">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              {t('landing.benefits.ready')}
-            </h2>
-            <p className="text-xl text-gray-200 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-              {t('landing.benefits.readyDesc')}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/wizard">
-                <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white">
-                  {t('landing.benefits.getStarted')}
-                </Button>
-              </Link>
-              <Link to="/schemes">
-                <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-gray-900 dark:border-gray-300 dark:text-gray-200 dark:hover:bg-gray-200 dark:hover:text-gray-900">
-                  {t('landing.benefits.explore')}
-                </Button>
-              </Link>
+        <section className="py-20 bg-gradient-to-r from-gray-900 to-blue-900 dark:from-gray-800 dark:to-blue-800 transition-colors">
+          <div className="container">
+            <div className="text-center text-white">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                {t('landing.benefits.ready')}
+              </h2>
+              <p className="text-xl text-gray-200 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+                {t('landing.benefits.readyDesc')}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link to="/wizard">
+                  <Button size="lg" className="bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700">
+                    {t('landing.benefits.getStarted')}
+                  </Button>
+                </Link>
+                <Link to="/schemes">
+                  <Button size="lg" className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 dark:bg-transparent dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-gray-900">
+                    {t('landing.benefits.explore')}
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
     </div>
   );
 };
