@@ -91,12 +91,12 @@ const Footer: React.FC = () => {
               <a href="#" className="block text-gray-400 hover:text-white text-sm transition-colors">
                 {t('footer.links.terms')}
               </a>
-              <a href="#" className="block text-gray-400 hover:text-white text-sm transition-colors">
+              <Link to="/contact" className="block text-gray-400 hover:text-white text-sm transition-colors">
                 {t('footer.links.contact')}
-              </a>
-              <a href="#" className="block text-gray-400 hover:text-white text-sm transition-colors">
+              </Link>
+              <Link to="/support" className="block text-gray-400 hover:text-white text-sm transition-colors">
                 {t('footer.links.support')}
-              </a>
+              </Link>
             </div>
           </div>
 
