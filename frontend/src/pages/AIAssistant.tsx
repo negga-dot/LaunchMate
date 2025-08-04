@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, MessageSquare, Calculator, Search, CheckCircle, HelpCircle, Phone } from 'lucide-react';
+import { Send, Bot, User, MessageSquare, Calculator, Search, CheckCircle, HelpCircle, Phone, Sparkles } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import Card from '../components/UI/Card';
@@ -9,10 +9,10 @@ import type { ChatMessage } from '../contexts/AppContext';
 // Gemini API Service
 class GeminiService {
   private apiKey: string;
-  private baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+  private baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
   constructor() {
-    this.apiKey = process.env.REACT_APP_GEMINI_API_KEY || '';
+    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
     if (!this.apiKey) {
       console.warn('Gemini API key not found. Please set REACT_APP_GEMINI_API_KEY environment variable.');
     }
@@ -123,7 +123,7 @@ const AIAssistant: React.FC = () => {
   const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const geminiService = useRef(new GeminiService());
+  const [showWelcome, setShowWelcome] = useState(true);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -342,6 +342,8 @@ Want help with the application process?`;
   const handleSendMessage = async () => {
     if (!message.trim()) return;
 
+    setShowWelcome(false);
+
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       message: message.trim(),
@@ -357,10 +359,21 @@ Want help with the application process?`;
       // First try predefined responses
       let botResponseText = getPredefinedResponse(userMessage.message);
       
-      // If no predefined response, use Gemini API
+      // If no predefined response, use a fallback response
       if (!botResponseText) {
-        const prompt = geminiService.current.createSystemPrompt(userMessage.message);
-        botResponseText = await geminiService.current.generateResponse(prompt);
+        botResponseText = `I understand you're asking about "${userMessage.message}". Here are some helpful resources:
+
+📋 **For compliance questions:**
+• Check our Setup Wizard for step-by-step guidance
+• Visit the Approval Tracker to see required documents
+• Browse our Scheme Recommender for funding options
+
+🔧 **For technical help:**
+• Use the Document Generator for form assistance
+• Check the Calendar for important deadlines
+• Contact our support team for personalized help
+
+Would you like me to help you with any specific compliance requirement?`;
       }
 
       const botResponse: ChatMessage = {
@@ -387,7 +400,9 @@ Want help with the application process?`;
 
   const handleQuickMessage = (quickMessage: string) => {
     setMessage(quickMessage);
-    setTimeout(() => handleSendMessage(), 100);
+    setTimeout(() => {
+      handleSendMessage();
+    }, 100);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -403,8 +418,8 @@ Want help with the application process?`;
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-2xl">
-              <Bot className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+            <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-3 rounded-2xl">
+              <Sparkles className="h-8 w-8 text-white" />
             </div>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">{t('chat.title')}</h1>
@@ -485,9 +500,11 @@ Want help with the application process?`;
 
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[500px] max-h-[600px]">
-                  {state.chatHistory.length === 0 ? (
+                  {showWelcome && state.chatHistory.length === 0 ? (
                     <div className="text-center py-8">
-                      <MessageSquare className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                      <div className="bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/50 dark:to-purple-900/50 p-4 rounded-2xl inline-block mb-4">
+                        <Bot className="h-12 w-12 text-blue-600 dark:text-blue-400" />
+                      </div>
                       <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                         Welcome! How can I help you today?
                       </h4>
@@ -498,14 +515,15 @@ Want help with the application process?`;
                       {/* Popular Questions */}
                       <div className="text-left max-w-md mx-auto">
                         <h5 className="font-medium text-gray-900 dark:text-white mb-3">{t('chat.popularQuestions')}:</h5>
-                        <div className="space-y-2">
+                        <div className="grid grid-cols-1 gap-2">
                           {popularQuestions.slice(0, 4).map((question, index) => (
                             <button
                               key={index}
                               onClick={() => handleQuickMessage(question)}
-                              className="w-full text-left p-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                              className="w-full text-left p-3 text-sm bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-600 rounded-lg transition-all duration-200 hover:shadow-sm"
                             >
-                              • {question}
+                              <span className="text-blue-600 dark:text-blue-400 mr-2">•</span>
+                              <span className="text-gray-700 dark:text-gray-300">{question}</span>
                             </button>
                           ))}
                         </div>
@@ -521,24 +539,24 @@ Want help with the application process?`;
                           <div className={`flex items-start space-x-2 max-w-[80%] ${msg.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                             <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
                               msg.sender === 'user' 
-                                ? 'bg-blue-500' 
-                                : 'bg-gray-200 dark:bg-gray-700'
+                                ? 'bg-gradient-to-br from-blue-500 to-blue-600' 
+                                : 'bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600'
                             }`}>
                               {msg.sender === 'user' ? (
                                 <User className="h-4 w-4 text-white" />
                               ) : (
-                                <Bot className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                                <Bot className="h-4 w-4 text-gray-600 dark:text-gray-200" />
                               )}
                             </div>
                             <div className={`px-4 py-2 rounded-2xl text-sm ${
                               msg.sender === 'user'
-                                ? 'bg-blue-500 text-white'
+                                ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
                                 : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
                             }`}>
                               <div className="whitespace-pre-wrap break-words">{msg.message}</div>
                               <div className={`text-xs mt-1 ${
                                 msg.sender === 'user' 
-                                  ? 'text-blue-100' 
+                                  ? 'text-blue-100 opacity-75' 
                                   : 'text-gray-500 dark:text-gray-400'
                               }`}>
                                 {new Date(msg.timestamp).toLocaleTimeString([], { 
@@ -554,14 +572,14 @@ Want help with the application process?`;
                       {isTyping && (
                         <div className="flex justify-start">
                           <div className="flex items-start space-x-2">
-                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                              <Bot className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center">
+                              <Bot className="h-4 w-4 text-gray-600 dark:text-gray-200" />
                             </div>
                             <div className="bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-2xl">
                               <div className="flex space-x-1">
-                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                               </div>
                             </div>
                           </div>
